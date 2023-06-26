@@ -1,0 +1,28 @@
+@page "/Titular/{dni:int?}"
+@inject ObtenerTitularUseCase ObtenerTitularUseCase
+@inject ModificarTitularUseCase ModificarTitularUseCase
+@inject NavigationManager Navegador
+<h3>Modificando Titular (@_titular.nombre)</h3>
+<input type ="text" placeholder="Nombre" @bind="_titular.nombre" class="form-control"> 
+<input type ="text" placeholder="Apellido" @bind="_titular.apellido" class="form-control">
+<input type ="text" placeholder="Direccion" @bind="_titular.Direccion" class="form-control"> 
+<input type ="text" placeholder="Telefono" @bind="_titular.telefono" class="form-control"> 
+<input type ="text" placeholder="Correo" @bind="_titular.Correo" class="form-control">
+<button class="btn btn-primary" @onclick="Aceptar">Aceptar</button> 
+@code{
+    Titular _titular = new Titular();
+    [Parameter] public int? Dni {get;set;}
+    protected override void OnParametersSet(){
+        if (Dni != null){
+            var _titularEncontrado = ObtenerTitularUseCase.Ejecutar(Dni.Value);
+            if (_titularEncontrado != null){
+                _titular = _titularEncontrado;
+            }
+        }
+    }
+
+    void Aceptar(){
+        ModificarTitularUseCase.Ejecutar(_titular);
+        Navegador.NavigateTo("ListadoTitulares");
+    }
+}

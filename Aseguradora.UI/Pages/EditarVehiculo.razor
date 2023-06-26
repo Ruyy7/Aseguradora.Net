@@ -1,0 +1,26 @@
+@page "/Vehiculo/{ID:int?}"
+@inject ObtenerVehiculoUseCase ObtenerVehiculoUseCase
+@inject ModificarVehiculoUseCase ModificarVehiculoUseCase
+@inject NavigationManager Navegador
+<h3>Modificando Vehiculo (@_Vehiculo.ID)</h3>
+<input type ="text" placeholder="Dominio" @bind="_Vehiculo.Dominio" class="form-control">
+<input type ="text" placeholder="Marca" @bind="_Vehiculo.marca" class="form-control">
+<input type ="number" placeholder="Año" @bind="_Vehiculo.año" class="form-control">
+<button class="btn btn-primary" @onclick="Aceptar">Aceptar</button>
+@code{
+    Vehiculo _Vehiculo = new Vehiculo();
+    [Parameter] public int? ID {get;set;}
+    protected override void OnParametersSet(){
+        if (ID != null){
+            var _VehiculoEncontrado = ObtenerVehiculoUseCase.Ejecutar(ID.Value);
+            if (_VehiculoEncontrado != null){
+                _Vehiculo = _VehiculoEncontrado;
+            }
+        }
+    }
+
+    void Aceptar(){
+        ModificarVehiculoUseCase.Ejecutar(_Vehiculo);
+        Navegador.NavigateTo("ListadoVehiculos");
+    }
+}

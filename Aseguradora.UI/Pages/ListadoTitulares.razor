@@ -1,0 +1,90 @@
+@page "/ListadoTitulares"
+@inject ListarTitularUseCase ListarTitularUseCase
+@inject AgregarTitularUseCase AgregarTitularUseCase
+@inject EliminarTitularUseCase EliminarTitularUseCase
+@inject NavigationManager Navegador
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>DNI</th>
+            <th>Dirección</th>
+            <th>Teléfono</th>
+            <th>Correo</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var t in ListaTitulares){
+            <tr>
+                <td>@t.ID</td>
+                <td>@t.nombre</td>
+                <td>@t.apellido</td>
+                <td>@t.dni</td>
+                <td>@t.Direccion</td>
+                <td>@t.telefono</td>
+                <td>@t.Correo</td>
+                <td>
+                    <button class="btn btn-primary" @onclick="()=>Modificacion(t)">
+                        <span class="oi oi-pencil"></span>
+                    </button>
+                    <button class="btn btn-danger" @onclick="()=>Eliminacion(t)">
+                        <span class="oi oi-trash"></span>
+                    </button>
+                </td>   
+            </tr>
+        }
+    </tbody>
+</table>
+<h6><span class="negrita">Agregar Titular:</span></h6>
+<h6>Nombre</h6> <input type ="text" placeholder="Nombre" @bind="_titular.nombre" class="form-control"> 
+<h6>Apellido</h6> <input type ="text" placeholder="Apellido" @bind="_titular.apellido" class="form-control"> 
+<h6>DNI</h6> <input type ="number" placeholder="DNI" @bind="_titular.dni" class="form-control"> 
+<h6>Direccion</h6> <input type ="text" placeholder="Direccion" @bind="_titular.Direccion" class="form-control"> 
+<h6>Telefono</h6> <input type ="text" placeholder="Teléfono" @bind="_titular.telefono" class="form-control"> 
+<h6>Correo</h6> <input type ="email" placeholder="Correo" @bind="_titular.Correo" class="form-control">
+<button class="btn btn-primary" @onclick="Aceptar">Aceptar</button>
+<Dialogo @ref="dialogo" />
+<Eliminar @ref="cartel"/>
+@code {
+    List<Titular> ListaTitulares = new List<Titular>();
+    protected override void OnInitialized(){
+        ListaTitulares = ListarTitularUseCase.Ejecutar();
+    }
+    Titular _titular = new Titular();
+    Dialogo dialogo = null!;
+    Eliminar cartel = null!;
+    void Aceptar (){
+        try{
+            if ((_titular.nombre != null)&&(_titular.apellido != null)&&(_titular.dni!=0) && (_titular.Direccion != null) && (_titular.telefono != null) && (_titular.Correo != null)){
+                AgregarTitularUseCase.Ejecutar (_titular);
+                Navegador.NavigateTo("/ListadoTitulares",true);
+            }
+            else{ 
+                dialogo.Mensaje = "Ningún campo puede estar vacio";
+                dialogo.Mostrar();
+            }
+        }
+        catch{
+            dialogo.Mensaje = "No se puede agregar este titular porque ya existe uno con el mismo DNI";
+            dialogo.Mostrar();
+        }
+    }
+
+    void Eliminacion(Titular t){
+        cartel.Mensaje = $"Desea eliminar el titular con DNI: {t.dni}";
+        cartel.Evento = EventCallback.Factory.Create(this,()=> Eliminar(t));
+        cartel.Mostrar();
+    }
+
+    private void Eliminar (Titular t){
+        EliminarTitularUseCase.Ejecutar(t.dni);
+        Navegador.NavigateTo("/ListadoTitulares",true);
+    }
+
+    void Modificacion (Titular t){
+        Navegador.NavigateTo($"Titular/{t.dni}");
+    }
+}

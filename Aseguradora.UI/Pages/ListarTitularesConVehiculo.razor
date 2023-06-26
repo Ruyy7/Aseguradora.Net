@@ -1,0 +1,53 @@
+@page "/ListadoTitularesYVehiculos"
+@inject ListarTitularesConSusVehiculosUseCase ListarTitularesConSusVehiculosUseCase
+<table class="table">
+    <tbody>
+        @foreach (var t in ListaTitularConVehiculos)
+        {
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>DNI</th>
+            </tr>
+            <tr>
+                <td>@t.ID</td>
+                <td>@t.nombre</td>
+                <td>@t.apellido</td>
+                <td>@t.dni</td>
+            </tr>
+            @if (t.Vehiculos != null)
+            {
+                <tr>
+                    <td colspan="4">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Marca Vehiculo</th>
+                                    <th>Año</th>
+                                    <th>Dominio</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var vehiculo in t.Vehiculos)
+                                {
+                                    <tr>
+                                        <td>@vehiculo.marca</td>
+                                        <td>@vehiculo.año</td>
+                                        <td>@vehiculo.Dominio</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+@code{
+    List<Titular> ListaTitularConVehiculos = new List<Titular>();
+    protected override void OnInitialized(){
+        ListaTitularConVehiculos = ListarTitularesConSusVehiculosUseCase.Ejecutar();
+    }
+}

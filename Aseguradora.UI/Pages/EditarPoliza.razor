@@ -1,0 +1,33 @@
+@page "/Poliza/{ID:int?}"
+@inject ObtenerPolizaUseCase ObtenerPolizaUseCase
+@inject ModificarPolizaUseCase ModificarPolizaUseCase
+@inject NavigationManager Navegador
+<h3>Modificando Poliza (@_Poliza.ID)</h3>
+<h6>Valor Asegurado</h6>
+<input type ="text" placeholder="Valor Asegurado" @bind="_Poliza.valorasegurado" class="form-control">
+<h6>Franquicia</h6>
+<input type ="number" placeholder="Franquicia" @bind="_Poliza.franquicia" class="form-control">
+<h6>Cobertura</h6>
+<input placeholder="Cobertura" @bind="_Poliza.cobertura" class="form-control">
+<h6>Fecha Inicio</h6>
+<input type="date" @bind="_Poliza.fechainicio" class="form-control">
+<h6>Fecha Fin</h6>
+<input type="date" @bind="_Poliza.fechafin" class="form-control">
+<button class="btn btn-primary" @onclick="Aceptar">Aceptar</button>
+@code{
+    Poliza _Poliza = new Poliza();
+    [Parameter] public int? ID {get;set;}
+    protected override void OnParametersSet(){
+        if (ID != null){
+            var _PolizaEncontrado = ObtenerPolizaUseCase.Ejecutar(ID.Value);
+            if (_PolizaEncontrado != null){
+                _Poliza = _PolizaEncontrado;
+            }
+        }
+    }
+
+    void Aceptar(){
+        ModificarPolizaUseCase.Ejecutar(_Poliza);
+        Navegador.NavigateTo("ListadoPolizas");
+    }
+}

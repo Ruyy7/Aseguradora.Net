@@ -1,0 +1,93 @@
+@page "/ListadoPolizas"
+@inject ListarPolizasUseCase ListarPolizasUseCase
+@inject ListarVehiculoUseCase ListarVehiculoUseCase
+@inject AgregarPolizaUseCase AgregarPolizaUseCase
+@inject ModificarPolizaUseCase ModificarPolizaUseCase
+@inject EliminarPolizaUseCase EliminarPolizaUseCase
+@inject NavigationManager Navegador
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Vehiculo ID</th>
+            <th>Valor Asegurado</th>
+            <th>Franquicia</th>
+            <th>Cobertura</th>
+            <th>Fecha Inicio</th>
+            <th>Fecha Fin</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var p in ListaPoliza){
+            <tr>
+                <td>@p.ID</td>
+                <td>@p.VehiculoID</td>
+                <td>@p.valorasegurado</td>
+                <td>@p.franquicia</td>
+                <td>@p.cobertura</td>
+                <td>@p.fechainicio.ToString("dd/MM/yyyy")</td>
+                <td>@p.fechafin.ToString("dd/MM/yyyy")</td>
+                <td>
+                    <button class="btn btn-primary" @onclick="()=>Modificacion(p)">
+                        <span class="oi oi-pencil"></span>
+                    </button>
+                    <button class="btn btn-danger" @onclick="()=>Eliminacion(p)">
+                        <span class="oi oi-trash"></span>
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<h6><span class="negrita">Agregar Poliza:</span></h6>
+<label for="VehiculoId">Vehiculo (Por Dominio)</label>
+<InputSelect id="VehiculoId" @bind-Value="_Poliza.VehiculoID">
+    @foreach (var Vehiculo in listaVehiculos){
+        <option value="@Vehiculo.ID">@Vehiculo.Dominio</option>
+    }
+</InputSelect>
+<h6>Valor Asegurado</h6> <input type ="number" placeholder="Valor Asegurado" @bind="_Poliza.valorasegurado" class="form-control">
+<h6>Franquicia</h6> <input type ="number" placeholder="Franquicia" @bind="_Poliza.franquicia" class="form-control">
+<h6>Cobertura</h6> <input type ="text" placeholder="Cobertura" @bind="_Poliza.cobertura" class="form-control">
+<h6>Fecha Inicio</h6> <input type="date" @bind="_Poliza.fechainicio" class="form-control">
+<h6>Fecha fin</h6> <input type="date" @bind="_Poliza.fechafin" class="form-control">
+<button class="btn btn-primary" @onclick="Aceptar">Aceptar</button>
+<Dialogo @ref="dialogo"/>
+<Eliminar @ref="cartel"/>
+@code {
+    List<Poliza> ListaPoliza = new List<Poliza>();
+    protected override void OnInitialized(){
+        ListaPoliza = ListarPolizasUseCase.Ejecutar();
+        listaVehiculos = ListarVehiculoUseCase.Ejecutar();
+    }
+    List<Vehiculo> listaVehiculos = new List<Vehiculo>();
+    Poliza _Poliza = new Poliza();
+    Dialogo dialogo = null!;
+    Eliminar cartel = null!;
+    void Aceptar(){
+        DateTime fechaprohibida = new DateTime(2000, 1, 1, 00, 00, 00);
+        if ((_Poliza.VehiculoID != 0) && (_Poliza.valorasegurado != 0) && (_Poliza.cobertura != null) && (_Poliza.franquicia != 0)&& (_Poliza.fechainicio != fechaprohibida) && (_Poliza.fechafin != fechaprohibida)){
+            AgregarPolizaUseCase.Ejecutar(_Poliza);
+            Navegador.NavigateTo("/ListadoPolizas",true);
+        }
+        else{
+            dialogo.Mensaje = "Ningún campo puede estar vacio";
+            dialogo.Mostrar();
+        }
+    }
+
+    void Eliminacion(Poliza p){
+        cartel.Mensaje = $"Desea eliminar la poliza con ID: {p.ID}";
+        cartel.Evento = EventCallback.Factory.Create(this,()=> Eliminar(p));
+        cartel.Mostrar();
+    }
+
+    private void Eliminar (Poliza p){
+        EliminarPolizaUseCase.Ejecutar(p.ID);
+        Navegador.NavigateTo("/ListadoPolizas",true);
+    }
+    void Modificacion (Poliza p){
+        Navegador.NavigateTo($"Poliza/{p.ID}");
+    }
+}

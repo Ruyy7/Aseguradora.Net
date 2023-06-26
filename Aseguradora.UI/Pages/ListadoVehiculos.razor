@@ -1,0 +1,92 @@
+@page "/ListadoVehiculos"
+@inject ListarVehiculoUseCase ListarVehiculoUseCase
+@inject AgregarVehiculoUseCase AgregarVehiculoUseCase
+@inject EliminarVehiculoUseCase EliminarVehiculoUseCase
+@inject ListarTitularUseCase ListarTitularUseCase
+@inject NavigationManager Navegador
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Titular ID</th>
+            <th>Dominio</th>
+            <th>Marca</th>
+            <th>Año</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var v in ListaVehiculo){
+            <tr>
+                <td>@v.ID</td>
+                <td>@v.TitularID</td>
+                <td>@v.Dominio</td>
+                <td>@v.marca</td>
+                <td>@v.año</td>
+                <td>
+                    <button class="btn btn-primary" @onclick="()=>Modificacion(v)">
+                        <span class="oi oi-pencil"></span>
+                    </button>
+                    <button class="btn btn-danger" @onclick="()=>Eliminacion(v)">
+                        <span class="oi oi-trash"></span>
+                    </button>
+                </td>               
+            </tr>
+        }
+    </tbody>
+</table>
+<h6><span class="negrita"> Agregar Vehiculo:</span></h6>
+<label for="TitularId">Titular:</label>
+<InputSelect id="TitularId" @bind-Value="_vehiculo.TitularID">
+    @foreach (var Titular in listaTitulares){
+        <option value="@Titular.ID">@Titular.nombre</option>
+    }
+</InputSelect>
+<h6>Dominio</h6> <input type ="text" placeholder="Dominio" @bind="_vehiculo.Dominio" class="form-control">
+<h6>Marca</h6> <input type ="text" placeholder="Marca" @bind="_vehiculo.marca" class="form-control">
+<h6>Año</h6> <input type ="number" placeholder="Año" @bind="_vehiculo.año" class="form-control">
+<button class="btn btn-primary" @onclick="Aceptar">Aceptar</button>
+<Dialogo @ref="dialogo" />
+<Eliminar @ref="cartel"/>
+@code {
+    List<Vehiculo> ListaVehiculo = new List<Vehiculo>();
+        protected override void OnInitialized(){
+            ListaVehiculo = ListarVehiculoUseCase.Ejecutar();
+            listaTitulares = ListarTitularUseCase.Ejecutar();
+        }
+    
+    List<Titular> listaTitulares = new List<Titular>();
+    Vehiculo _vehiculo = new Vehiculo();
+    Dialogo dialogo =null!;
+    Eliminar cartel = null!;
+
+    void Aceptar (){
+        try{
+            if ((_vehiculo.TitularID!=0) && (_vehiculo.marca != null) && (_vehiculo.año !=0) && (_vehiculo.Dominio != null)){
+                AgregarVehiculoUseCase.Ejecutar(_vehiculo);
+                Navegador.NavigateTo("/ListadoVehiculos",true);
+            }
+            else{
+                dialogo.Mostrar();
+            }
+        }
+        catch{
+            dialogo.Mensaje = "El domino del vehículo a agregar ya esta asignado a otro vehículo";
+            dialogo.Mostrar();
+        }
+    }
+
+    void Eliminacion(Vehiculo v){
+        cartel.Mensaje = $"Desea eliminar el vehiculo con dominio: {v.Dominio}";
+        cartel.Evento = EventCallback.Factory.Create(this,()=> Eliminar(v));
+        cartel.Mostrar();
+    }
+
+    private void Eliminar (Vehiculo v){
+        EliminarVehiculoUseCase.Ejecutar(v.ID);
+        Navegador.NavigateTo("/ListadoVehiculos",true);
+    }
+    void Modificacion (Vehiculo v){
+        Navegador.NavigateTo($"Vehiculo/{v.ID}");
+    }
+}

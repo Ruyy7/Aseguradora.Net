@@ -1,0 +1,29 @@
+@page "/Tercero/{dni:int?}"
+@inject ObtenerTerceroUseCase ObtenerTerceroUseCase
+@inject ModificarTerceroUseCase ModificarTerceroUseCase
+@inject ListarTerceroUseCase ListarTerceroUseCase
+
+@inject NavigationManager Navegador
+<h3>Modificando Tercero (@_Tercero.nombre)</h3>
+<input type ="text" placeholder="Nombre" @bind="_Tercero.nombre" class="form-control"> 
+<input type ="text" placeholder="Apellido" @bind="_Tercero.apellido" class="form-control">
+<input type ="text" placeholder="Telefono" @bind="_Tercero.telefono" class="form-control">
+<input type ="text" placeholder="Nombre Aseguradora" @bind="_Tercero.nombreaseguradora" class="form-control">
+<button class="btn btn-primary" @onclick="Aceptar">Aceptar</button>
+@code{
+    Tercero _Tercero = new Tercero();
+    [Parameter] public int? Dni {get;set;}
+    protected override void OnParametersSet(){
+        if (Dni != null){
+            var _TerceroEncontrado = ObtenerTerceroUseCase.Ejecutar(Dni.Value);
+            if (_TerceroEncontrado != null){
+                _Tercero = _TerceroEncontrado;
+            }
+        }
+    }
+
+    void Aceptar(){
+        ModificarTerceroUseCase.Ejecutar(_Tercero);
+        Navegador.NavigateTo("ListadoTerceros");
+    }
+}

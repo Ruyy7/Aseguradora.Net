@@ -1,0 +1,31 @@
+@page "/Siniestro/{ID:int?}"
+@inject ObtenerSiniestroUseCase ObtenerSiniestroUseCase
+@inject ModificarSiniestroUseCase ModificarSiniestroUseCase
+@inject NavigationManager Navegador
+<h3>Modificando Siniestro (@_Siniestro.ID)</h3>
+<h6>Fecha Ingreso</h6>
+<input type="date" @bind="_Siniestro.fechaingreso" class="form-control">
+<h6>Fecha ocurrencia</h6>
+<input type="date" @bind="_Siniestro.fechaocurrencia" class="form-control">
+<h6>Dirección</h6>
+<input type ="text" placeholder="Dirección" @bind="_Siniestro.direccion" class="form-control">
+<h6>Descripción</h6>
+<input type ="text" placeholder="Descripción" @bind="_Siniestro.descripcion" class="form-control">
+<button class="btn btn-primary" @onclick="Aceptar">Aceptar</button>
+@code{
+    Siniestro _Siniestro = new Siniestro();
+    [Parameter] public int? ID {get;set;}
+    protected override void OnParametersSet(){
+        if (ID != null){
+            var _SiniestroEncontrado = ObtenerSiniestroUseCase.Ejecutar(ID.Value);
+            if (_SiniestroEncontrado != null){
+                _Siniestro = _SiniestroEncontrado;
+            }
+        }
+    }
+
+    void Aceptar(){
+        ModificarSiniestroUseCase.Ejecutar(_Siniestro);
+        Navegador.NavigateTo("ListadoSiniestros");
+    }
+}

@@ -1,0 +1,90 @@
+@page "/ListadoTerceros"
+@inject ListarTerceroUseCase ListarTerceroUseCase
+@inject ListarSiniestroUseCase ListarSiniestroUseCase
+@inject AgregarTerceroUseCase AgregarTerceroUseCase
+@inject EliminarTerceroUseCase EliminarTerceroUseCase
+@inject NavigationManager Navegador
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>DNI</th>
+            <th>Teléfono</th>
+            <th>Aseguradora</th>
+            <th>Siniestro</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var t in ListaTerceros){
+            <tr>
+                <td>@t.ID</td>
+                <td>@t.nombre</td>
+                <td>@t.apellido</td>
+                <td>@t.dni</td>
+                <td>@t.telefono</td>
+                <td>@t.nombreaseguradora</td>
+                <td>@t.SiniestroID</td>
+                <td>
+                    <button class="btn btn-primary" @onclick="()=>Modificacion(t)">
+                        <span class="oi oi-pencil"></span>
+                    </button>
+                    <button class="btn btn-danger" @onclick="()=>Eliminacion(t)">
+                        <span class="oi oi-trash"></span>
+                    </button>
+                </td>            
+            </tr>
+        }
+    </tbody>
+</table>
+<h6><span class="negrita">Agregar Tercero:</span></h6>
+<label for="SiniestroId">Siniestro (Por Dirección)</label>
+<InputSelect id="SiniestroId" @bind-Value="_Tercero.SiniestroID">
+    @foreach (var Siniestro in listaSiniestros){
+        <option value="@Siniestro.ID">@Siniestro.direccion</option>
+    }
+</InputSelect>
+<h6>Nombre</h6> <input type ="text" placeholder="Nombre" @bind="_Tercero.nombre" class="form-control">
+<h6>Apellido</h6> <input type ="text" placeholder="Apellido" @bind="_Tercero.apellido" class="form-control">
+<h6>DNI</h6> <input type ="number" placeholder="DNI" @bind="_Tercero.dni" class="form-control">
+<h6>Telefono</h6> <input type ="number" placeholder="Teléfono" @bind="_Tercero.telefono" class="form-control"> 
+<h6>Aseguradora</h6> <input type ="text" placeholder="Nombre aseguradora" @bind="_Tercero.nombreaseguradora" class="form-control">
+<button class="btn btn-primary" @onclick="Aceptar">Aceptar</button>
+<Dialogo @ref="dialogo"/>
+<Eliminar @ref="cartel"/>
+@code {
+    List<Tercero> ListaTerceros = new List<Tercero>();
+        protected override void OnInitialized(){
+            ListaTerceros = ListarTerceroUseCase.Ejecutar();
+            listaSiniestros = ListarSiniestroUseCase.Ejecutar();
+        }
+    List<Siniestro> listaSiniestros = new List<Siniestro>();
+    Tercero _Tercero = new Tercero();
+    Dialogo dialogo =null!;
+    Eliminar cartel = null!;
+    void Aceptar (){
+        if ((_Tercero.SiniestroID!=0) && (_Tercero.nombre != null) && (_Tercero.apellido != null) && (_Tercero.dni != 0) && (_Tercero.nombreaseguradora != null)){
+            AgregarTerceroUseCase.Ejecutar(_Tercero);
+            Navegador.NavigateTo("/ListadoTerceros",true);
+        }
+        else{
+            dialogo.Mensaje = "Ningún campo puede estar vacio";
+            dialogo.Mostrar();
+        }
+    }
+    void Eliminacion(Tercero t){
+        cartel.Mensaje = $"Desea eliminar el tercero con DNI: {t.dni}";
+        cartel.Evento = EventCallback.Factory.Create(this,()=> Eliminar(t));
+        cartel.Mostrar();
+    }
+
+    private void Eliminar (Tercero t){
+        EliminarTerceroUseCase.Ejecutar(t.dni);
+        Navegador.NavigateTo("/ListadoTerceros",true);
+    }
+    void Modificacion (Tercero t){
+        Navegador.NavigateTo($"Tercero/{t.dni}");
+    }
+}

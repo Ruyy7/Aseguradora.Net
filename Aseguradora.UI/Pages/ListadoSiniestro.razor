@@ -1,0 +1,98 @@
+@page "/ListadoSiniestros"
+@inject ListarSiniestroUseCase ListarSiniestroUseCase
+@inject ListarPolizasUseCase ListarPolizasUseCase
+@inject AgregarSiniestroUseCase AgregarSiniestroUseCase
+@inject EliminarSiniestroUseCase EliminarSiniestroUseCase
+@inject ListarTerceroUseCase ListarTerceroUseCase
+@inject NavigationManager Navegador
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Poliza ID</th>
+            <th>Fecha de Ingreso</th>
+            <th>Fecha de Ocurrencia</th>
+            <th>Dirección</th>
+            <th>Descripción</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var s in ListaSiniestros){
+            <tr>
+                <td>@s.ID</td>
+                <td>@s.PolizaID</td>
+                <td>@s.fechaingreso.ToString("dd/MM/yyyy")</td>
+                <td>@s.fechaocurrencia.ToString("dd/MM/yyyy")</td>
+                <td>@s.direccion</td>
+                <td>@s.descripcion</td>
+                <td>
+                    <button class="btn btn-primary" @onclick="()=>Modificacion(s)">
+                        <span class="oi oi-pencil"></span>
+                    </button>
+                    <button class="btn btn-danger" @onclick="()=>Eliminacion(s)">
+                        <span class="oi oi-trash"></span>
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<h6><span class="negrita">Agregar Siniestro:</span></h6>
+<label for="PolizaId">Poliza (Por ID)</label>
+<InputSelect id="PolizaId" @bind-Value="_Siniestro.PolizaID">
+    @foreach (var Poliza in listaPolizas){
+        <option value="@Poliza.ID">@Poliza.ID</option>
+    }
+</InputSelect>
+<h6>Fecha ingreso</h6> <input type="date" @bind="_Siniestro.fechaingreso" class="form-control">
+<h6>Fecha ocurrencia</h6> <input type="date" @bind="_Siniestro.fechaocurrencia" class="form-control">
+<h6>Dirección</h6> <input type ="text" placeholder="Dirección" @bind="_Siniestro.direccion" class="form-control">
+<h6>Descripción</h6> <input type ="text" placeholder="Descripción" @bind="_Siniestro.descripcion" class="form-control">
+<button class="btn btn-primary" @onclick="Aceptar">Aceptar</button>
+<Dialogo @ref="dialogo"/>
+<Eliminar @ref="cartel"/>
+@code {
+    List<Siniestro> ListaSiniestros = new List<Siniestro>();
+        protected override void OnInitialized(){
+            ListaSiniestros = ListarSiniestroUseCase.Ejecutar();
+            listaPolizas = ListarPolizasUseCase.Ejecutar();
+        }
+
+    List<Poliza> listaPolizas = new List<Poliza>();
+    
+    Siniestro _Siniestro = new Siniestro();
+    Dialogo dialogo =null!;
+    Eliminar cartel = null!;
+    void Aceptar (){
+        DateTime fechaprohibida = new DateTime (2000,1,1,00,00,00);
+        try{
+            if ((_Siniestro.PolizaID!=0) && (_Siniestro.fechaingreso != fechaprohibida) && (_Siniestro.fechaocurrencia != fechaprohibida) && (_Siniestro.direccion != null) && (_Siniestro.descripcion != null)){
+                AgregarSiniestroUseCase.Ejecutar(_Siniestro);
+                Navegador.NavigateTo("/ListadoSiniestros",true);
+            }
+            else{
+                dialogo.Mensaje = "Ningún campo puede estar vacio";
+                dialogo.Mostrar();
+            }
+        }
+        catch{
+            dialogo.Mensaje = "La ocurrencia del siniestro debe estar en el lapso de tiempo de la poliza correspondiente";
+            dialogo.Mostrar();
+        }
+    }
+
+    void Eliminacion(Siniestro s){
+        cartel.Mensaje = $"Desea eliminar el siniestro con ID: {s.ID}";
+        cartel.Evento = EventCallback.Factory.Create(this,()=> Eliminar(s));
+        cartel.Mostrar();
+    }
+
+    private void Eliminar (Siniestro s){
+        EliminarSiniestroUseCase.Ejecutar(s.ID);
+        Navegador.NavigateTo("/ListadoSiniestros",true);
+    }
+    void Modificacion (Siniestro s){
+        Navegador.NavigateTo($"Siniestro/{s.ID}");
+    }
+}
